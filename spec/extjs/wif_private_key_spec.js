@@ -1,27 +1,45 @@
 describe('WifPrivateKey', function() {
-  var mainnetUncompressed = '5J3mBbAH58CpQ3Y5RNJpUKPE62SQ5tfcvU2JpbnkeyhfsYB1Jcn';
-  var mainnetCompressed = 'KxFC1jmwwCoACiCAWZ3eXa96mBM6tb3TYzGmf6YwgdGWZgawvrtJ';
-  var testnetCompressed = 'cMceqPhHedrhbcR9eXgzmfWy7kRqLyAxMYwFT6ABDWsiwUp9Nsq9';
+  // Test-only key material generated in memory. Never fund these deterministic keys.
+  function dummyKeyBytes(fillValue) {
+    return new Array(32).fill(fillValue);
+  }
 
-  it('parses an official uncompressed mainnet WIF example', function() {
+  function dummyWif(fillValue, compressed, version) {
+    var payload = dummyKeyBytes(fillValue);
+    if (compressed)
+      payload.push(1);
+    return Bitcoin.base58check.encode(payload, version);
+  }
+
+  var mainnetUncompressed = dummyWif(1, false, 0x80);
+  var mainnetCompressed = dummyWif(1, true, 0x80);
+  var testnetCompressed = dummyWif(2, true, 0xEF);
+
+  it('parses a generated dummy uncompressed mainnet WIF', function() {
     var result = WifPrivateKey.parse(mainnetUncompressed, false);
     expect(result.valid).toEqual(true);
     expect(result.compressed).toEqual(false);
-    expect(result.key.getAddress(0).toString()).toEqual('1424C2F4bC9JidNjjTUZCbUxv6Sa1Mt62x');
+    expect(result.key.getAddress(0).toString()).toEqual(
+      new Bitcoin.ECKey(dummyKeyBytes(1), false).getAddress(0).toString()
+    );
   });
 
-  it('parses an official compressed mainnet WIF example', function() {
+  it('parses a generated dummy compressed mainnet WIF', function() {
     var result = WifPrivateKey.parse(mainnetCompressed, false);
     expect(result.valid).toEqual(true);
     expect(result.compressed).toEqual(true);
-    expect(result.key.getAddress(0).toString()).toEqual('1J7mdg5rbQyUHENYdx39WVWK7fsLpEoXZy');
+    expect(result.key.getAddress(0).toString()).toEqual(
+      new Bitcoin.ECKey(dummyKeyBytes(1), true).getAddress(0).toString()
+    );
   });
 
-  it('parses a compressed testnet WIF only on testnet', function() {
+  it('parses a generated dummy compressed testnet WIF only on testnet', function() {
     var testnetResult = WifPrivateKey.parse(testnetCompressed, true);
     var mainnetResult = WifPrivateKey.parse(testnetCompressed, false);
     expect(testnetResult.valid).toEqual(true);
-    expect(testnetResult.key.getAddress(111).toString()).toEqual('mrcNu71ztWjAQA6ww9kHiW3zBWSQidHXTQ');
+    expect(testnetResult.key.getAddress(111).toString()).toEqual(
+      new Bitcoin.ECKey(dummyKeyBytes(2), true).getAddress(111).toString()
+    );
     expect(mainnetResult.valid).toEqual(false);
     expect(mainnetResult.code).toEqual('network');
   });

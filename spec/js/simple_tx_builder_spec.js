@@ -5,6 +5,14 @@ describe('SimpleTransactionBuilder', function() {
   var destinationAddress;
   var sourceScript;
 
+  // Test-only key material generated in memory. Never fund these deterministic keys.
+  function dummyWif(fillValue, compressed) {
+    var payload = new Array(32).fill(fillValue);
+    if (compressed)
+      payload.push(1);
+    return Bitcoin.base58check.encode(payload, 0x80);
+  }
+
   function expectError(callback, messageFragment) {
     var message = '';
     try {
@@ -27,11 +35,11 @@ describe('SimpleTransactionBuilder', function() {
 
   beforeEach(function() {
     sourceKey = WifPrivateKey.parse(
-      'KxFC1jmwwCoACiCAWZ3eXa96mBM6tb3TYzGmf6YwgdGWZgawvrtJ',
+      dummyWif(1, true),
       false
     ).key;
     destinationKey = WifPrivateKey.parse(
-      '5J3mBbAH58CpQ3Y5RNJpUKPE62SQ5tfcvU2JpbnkeyhfsYB1Jcn',
+      dummyWif(2, false),
       false
     ).key;
     sourceAddress = sourceKey.getAddress(0).toString();
