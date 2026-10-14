@@ -2,6 +2,11 @@ $(document).ready(function() {
   setInterval(updateDashboard, (10 * 1000));
   setInterval(updateBalances, (600 * 1000));
 
+  $(document).on('wallet:ready', function() {
+    updateBalances();
+    updateDashboard();
+  });
+
   function updateDashboard() {
 
     if (! WALLET.isReady())
@@ -11,8 +16,12 @@ $(document).ready(function() {
         url: "https://blockchain.info/q/24hrprice?cors=true",
         type: "GET",
         context: this,
-        error: function () {},
         dataType: 'text',
+        error: function () {
+            $('#btc-price').text('Unavailable');
+            $('#btc-balance').text(formatBTC(WALLET.getBalance()));
+            $('#dollar-balance').text(USE_TESTNET ? 'Testnet' : 'Mainnet');
+        },
         success : function (response) {
             $('#btc-price').text('$' + response);
 

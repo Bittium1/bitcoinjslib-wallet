@@ -1,0 +1,28 @@
+{
+  "name": "sf-bitcoin-devs-wallet",
+  "productName": "SF Bitcoin Devs Wallet",
+  "version": "0.1.0",
+  "description": "Loopback-only legacy P2PKH wallet for local Bitcoin Core and Fulcrum",
+  "main": "desktop/main.js",
+  "author": "SF Bitcoin Devs contributors",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "electron-forge start",
+    "test:desktop": "node --test desktop/tests/*.test.js",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "make:windows": "electron-forge make --platform=win32 --arch=x64",
+    "make:mac": "electron-forge make --platform=darwin"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "7.11.2",
+    "@electron-forge/maker-dmg": "7.11.2",
+    "@electron-forge/maker-squirrel": "7.11.2",
+    "@electron-forge/maker-zip": "7.11.2",
+    "@electron-forge/plugin-fuses": "7.11.2",
+    "@electron/fuses": "1.8.0",
+    "electron": "44.7.2"
+  },
+  "packageManager": "pnpm@11.25.0"
+}

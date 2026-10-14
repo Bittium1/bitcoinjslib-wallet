@@ -13,6 +13,9 @@
     <title>SF Bitcoin Devs HD Wallet - A Secure Hierarchial Deterministic Wallet</title>
   </head>
   <body>
+    <div id="local-backend-status" class="alert alert-info" style="margin: 10px;" aria-live="polite">
+      Checking local Bitcoin Core and Electrum services...
+    </div>
     <div id="logon" class="all-wrapper no-menu-wrapper">
       <div class="login-logo-w"><a href="#" class="logo"><i class="fa fa-cloud-download"><span>SF Bitcoin Devs HD Wallet</span></i></a></div>
       <div class="row">
@@ -22,9 +25,10 @@
               <div class="main-content main-content-grey-gradient no-page-header">
                 <div class="main-content-inner">
                   <form>
-                    <h3 class="form-title form-title-first"><i class="fa fa-lock"></i>Login With Your Passphrase</h3>
+                    <h3 class="form-title form-title-first"><i class="fa fa-lock"></i>Open Wallet</h3>
                     <div class="form-group">
-                      <input id="password" placeholder="Enter your SF Bitcoin Devs HD Wallet 12 word passphrase or click on 'Start a new wallet' if you are new user." value="" type="password" class="form-control">
+                      <input id="password" placeholder="Enter an Electrum seed or a WIF private key." value="" type="password" autocomplete="off" class="form-control">
+                      <p id="password-status" class="help-block" aria-live="polite">Enter an Electrum v1/v2 standard seed or one WIF private key.</p>
                     </div>
                     <div id="advanced" class="row collapse">
                       <div class="form-group col-md-4">
@@ -38,9 +42,14 @@
                           <a href="app.html?testnet=0&advanced=1" id="bitcoin" class="btn btn-default">Bitcoin</a>
                         </div>
                       </div>
+                      <div class="form-group col-md-4">
+                        <label for="seed-extension">Electrum v2 seed extension (optional)</label>
+                        <input type="password" id="seed-extension" value="" autocomplete="off" class="form-control" aria-describedby="seed-extension-help">
+                        <p id="seed-extension-help" class="help-block">Leave empty unless the Electrum v2 wallet was created with a seed extension.</p>
+                      </div>
                     </div>
 
-                    <input type="button" id="open-sesame" disabled="disabled" data-toggle="collapse" data-target="#create-keys" value="Open Wallet" class="btn btn-primary">&nbsp;
+                    <input type="button" id="open-sesame" disabled="disabled" value="Open Wallet" class="btn btn-primary">&nbsp;
                     <input type="button" id="generate-password" data-toggle="collapse" data-target="#create-wallet" value="Start a new wallet" class="btn btn-success">&nbsp;
                     <a href="#" data-toggle="collapse" data-target="#advanced">Advanced Settings</a>
                   </form><br>
@@ -55,6 +64,7 @@
                       We have created a secure passphrase for you in the box below. Write
                       your passphrase down and keep it safe. Paste it into the text box above to open your wallet.
                     </p>
+                    <p><strong>Compatibility:</strong> newly generated passphrases remain legacy Electrum v1 seeds.</p>
                     <div>
                       <div class="input-group">
                         <input id="generated" readonly="readonly" value="" type="text" class="form-control"><span id="regenerate-password" data-toggle="tooltip" title="Click to generate another random passphrase." class="input-group-addon"><i class="fa fa-repeat"></i></span>
@@ -99,14 +109,14 @@
       <div class="row">
         <div class="col-md-3">
           <div class="text-center">
-            <button type="button" data-toggle="collapse" data-target=".navbar-ex1-collapse" class="navbar-toggle"><span class="sr-only">Toggle navigation</span><span class="fa fa-bar"></span><span class="fa fafa fa-bar"></span><span class="fa fa-bar"></span></button>
+            <button type="button" aria-controls="wallet-navigation" aria-expanded="false" class="navbar-toggle"><span class="sr-only">Toggle navigation</span><span class="fa fa-bar"></span><span class="fa fafa fa-bar"></span><span class="fa fa-bar"></span></button>
           </div>
-          <div class="side-bar-wrapper collapse navbar-collapse navbar-ex1-collapse"><a href="#" class="logo hidden-sm hidden-xs"><i class="fa fa-cloud-download"><span>SF Bitcoin Devs HD Wallet</span></i></a>
+          <div id="wallet-navigation" class="side-bar-wrapper collapse navbar-collapse navbar-ex1-collapse"><a href="#" class="logo hidden-sm hidden-xs"><i class="fa fa-cloud-download"><span>SF Bitcoin Devs HD Wallet</span></i></a>
             <div class="relative-w">
               <ul class="side-menu">
                 <li class="current"><a id="your-dashboard-nav" href="#"><i class="fa fa-dashboard"></i>Dashboard</a></li>
                 <li><a id="your-addresses-nav" href="#"><i class="fa fa-bitcoin"></i>Public Addresses</a></li>
-                <li><a id="make-payment-nav" href="#"><span class="badge pull-right"></span><i class="fa fa-exchange"></i>Make Payment</a></li>
+                <li><a id="make-payment-nav" href="#"><span class="badge pull-right"></span><i class="fa fa-exchange"></i>Transaction Builder</a></li>
               </ul>
             </div>
           </div>
@@ -188,113 +198,91 @@
                   </div>
                 </div>
                 <!-- End of addresses screen-->
-                <!-- Start of create payment screen-->
+                <!-- Start of simple transaction builder-->
                 <div id="tx" class="widget">
-                  <h3 class="section-title first-title"><i class="fa fa-table"></i>Make a Payment</h3>
+                  <h3 class="section-title first-title"><i class="fa fa-exchange"></i>Simple Transaction Builder</h3>
                   <div class="widget-content-white glossed">
                     <div class="padded">
-                      <form action="/" method="get" class="form-vertical">
+                      <form id="simpleTxForm" class="form-vertical">
                         <fieldset>
-                          <input id="txSec" type="hidden" class="form-control">
                           <div class="row">
-                            <div class="col-xs-7">
-                              <label for="txDropAddr">Source Address</label>
-                              <select id="txDropAddr" class="form-control"></select>
+                            <div class="col-sm-8">
+                              <label for="simpleTxSource">Source address</label>
+                              <select id="simpleTxSource" class="form-control"></select>
                             </div>
-                            <div class="col-xs-3">
-                              <label for="txBalance">Balance</label>
+                            <div class="col-sm-4">
+                              <label for="simpleTxBalance">Spendable balance</label>
                               <div class="input-group">
-                                <input id="txBalance" readonly="readonly" type="text" class="form-control"><span class="input-group-addon">BTC</span>
+                                <input id="simpleTxBalance" readonly="readonly" value="0.00000000" type="text" class="form-control"><span class="input-group-addon">BTC</span>
                               </div>
                             </div>
                           </div><br>
                           <div class="row">
-                            <div class="col-xs-7">
-                              <label for="txDest">Destination Address</label>
+                            <div class="col-sm-8">
+                              <label for="simpleTxDestination">Destination address</label>
+                              <input id="simpleTxDestination" type="text" placeholder="Legacy P2PKH or P2SH address" autocomplete="off" spellcheck="false" class="form-control">
                             </div>
-                            <div class="col-xs-3">
+                            <div class="col-sm-4">
+                              <label for="simpleTxAmount">Amount</label>
                               <div class="input-group">
-                                <label for="txValue">Amount</label>
-                              </div>
-                            </div>
-                          </div>
-                          <div style="padding-bottom: 10px;" class="row txCC">
-                            <div class="col-xs-7">
-                              <input id="txDest" type="text" placeholder="E.g. 1BountYypWttTvAJcMJVvSRDfX3TJ182To" autocomplete="off" class="form-control">
-                            </div>
-                            <div class="col-xs-3">
-                              <div class="input-group">
-                                <input id="txValue" placeholder="E.g. 0.01" type="text" autocomplete="off" class="form-control"><span class="input-group-addon">BTC</span>
-                              </div>
-                            </div>
-                            <div class="col-xs-2"><span class="help-inline errormsg">
-                                <button id="txAddDest" style="margin-bottom: 10px;" type="button" class="btn input-up">+</button>
-                                <button id="txRemoveDest" style="margin-bottom: 10px;" type="button" disabled="disabled" class="btn input-up">–</button></span></div>
-                          </div>
-                          <div class="row">
-                            <div class="col-xs-4">
-                              <label for="txFee">Fee (minimum 0.0001)</label>
-                              <div class="input-group">
-                                <input id="txFee" type="text" value="0.0001" class="form-control"><span class="input-group-addon">BTC</span>
+                                <input id="simpleTxAmount" placeholder="0.00100000" type="text" inputmode="decimal" autocomplete="off" class="form-control"><span class="input-group-addon">BTC</span>
                               </div>
                             </div>
                           </div><br>
-                          <div class="control-group">
-                            <label for="txFee" class="control-label">You can check the payment before it is sent to the network.</label>
-                            <div class="controls">
-                              <button id="txSend" disabled="disabled" style="margin-bottom: 10px;" type="button" class="btn btn-success">Verify and Send</button>
+                          <div class="row">
+                            <div class="col-sm-4">
+                              <label for="simpleTxFee">Fixed transaction fee</label>
+                              <div class="input-group">
+                                <input id="simpleTxFee" type="text" value="0.00001000" inputmode="decimal" autocomplete="off" class="form-control"><span class="input-group-addon">BTC</span>
+                              </div>
+                              <p class="help-block">The fee is fixed, not a fee rate.</p>
                             </div>
+                          </div>
+                          <div id="simpleTxStatus" class="alert alert-info" aria-live="polite">Select a source address to load its unspent outputs.</div>
+                          <div class="controls">
+                            <button id="simpleTxBuild" disabled="disabled" type="button" class="btn btn-success"><i class="fa fa-wrench"></i> Build and sign locally</button>
                           </div>
                         </fieldset>
                       </form>
+                      <div id="simpleTxPreview" style="display: none; margin-top: 20px;">
+                        <h4>Signed transaction preview</h4>
+                        <table class="table table-bordered">
+                          <tbody>
+                            <tr><th>Inputs</th><td id="simpleTxInputCount"></td></tr>
+                            <tr><th>Amount</th><td><span id="simpleTxPreviewAmount"></span> BTC</td></tr>
+                            <tr><th>Actual fee</th><td><span id="simpleTxPreviewFee"></span> BTC</td></tr>
+                            <tr><th>Change</th><td><span id="simpleTxPreviewChange"></span> BTC</td></tr>
+                          </tbody>
+                        </table>
+                        <div class="form-group">
+                          <label for="simpleTxHex">Signed raw transaction</label>
+                          <textarea id="simpleTxHex" rows="6" readonly="readonly" spellcheck="false" class="form-control"></textarea>
+                        </div>
+                        <p class="help-block">Building does not transmit anything. Broadcast is a separate confirmed action.</p>
+                        <button id="simpleTxBroadcast" disabled="disabled" type="button" class="btn btn-warning"><i class="fa fa-bullhorn"></i> Review broadcast</button>
+                      </div>
                     </div>
                   </div>
                 </div>
-                <!-- End of create payment screen-->
-                <div id="verifyModal" class="modal">
+                <!-- End of simple transaction builder-->
+                <div id="broadcastModal" class="modal" role="dialog" aria-labelledby="broadcastModalTitle">
                   <div class="modal-dialog">
                     <div class="modal-content">
                       <div class="modal-header">
                         <button type="button" data-dismiss="modal" aria-hidden="true" class="close">×</button>
-                        <h6>Send payment of <span id="verifyAmountTitle">0.005</span> BTC from <span id="verifySource">1BountYypWttTvAJcMJVvSRDfX3TJ182</span></h6>
+                        <h4 id="broadcastModalTitle">Confirm transaction broadcast</h4>
                       </div>
-                      <div id="verifyBody" class="modal-body">
-                        <table class="table table-bordered">
-                          <thead id="verifyTable">
-                            <tr>
-                              <th>Destination Address</th>
-                              <th>Amount</th>
-                            </tr>
-                          </thead>
-                          <tr>
-                            <td><span>A fee of <span class="txFeeMsg">0.0001</span> BTC will be added.</span></td>
-                            <td><span><strong><span class="txFeeMsg">0.0001<span></strong> BTC</span></td>
-                          </tr>
-                          <tfoot>
-                            <tr>
-                              <td><strong>Total</strong></td>
-                              <td><strong id="verifyTotal">50.05</strong> BTC</td>
-                            </tr>
-                          </tfoot>
-                        </table>
-                        <p id="tx-toggle"><a data-toggle="collapse" data-target="#advanced-details">Show/Hide Transaction Details (Advanced users)</a></p>
-                        <div id="advanced-details" class="collapse">
-                          <div class="control-group">
-                            <label for="txJSON" class="control-label">JSON Transaction</label>
-                            <div class="controls">
-                              <textarea id="txJSON" rows="4" class="span5"></textarea>
-                            </div>
-                          </div>
-                          <div class="control-group">
-                            <label for="txHex" class="control-label">Raw Transaction</label>
-                            <div class="controls">
-                              <textarea id="txHex" rows="4" class="span5"></textarea>
-                            </div>
-                          </div>
-                        </div>
+                      <div class="modal-body">
+                        <p><strong>This action sends the signed transaction to the configured Bitcoin network.</strong></p>
+                        <dl>
+                          <dt>Destination</dt><dd><code id="broadcastDestination"></code></dd>
+                          <dt>Amount</dt><dd><span id="broadcastAmount"></span> BTC</dd>
+                          <dt>Actual fee</dt><dd><span id="broadcastFee"></span> BTC</dd>
+                        </dl>
                       </div>
-                      <div class="modal-footer"><a href="#" data-dismiss="modal" class="btn">Cancel</a>
-                        <button id="sendPayment" data-dismiss="modal" class="btn btn-primary">Send Payment</button>
+                      <div class="modal-footer">
+                        <button type="button" data-dismiss="modal" class="btn btn-default">Cancel</button>
+                        <button id="confirmBroadcast" type="button" class="btn btn-danger">Broadcast transaction</button>
                       </div>
                     </div>
                   </div>
@@ -327,11 +315,14 @@
     <script src="extjs/qrcode.js"></script>
     <script src="extjs/mnemonic.js"></script>
     <script src="extjs/electrum.js"></script>
+    <script src="extjs/electrum-v2.js"></script>
+    <script src="extjs/wif-private-key.js"></script>
     <script src="extjs/gibberish-aes-1.0.0.js"></script>
     <script src="js/helloblock.js"></script>
     <script src="js/consts.js"></script>
     <script src="js/util.js"></script>
     <script src="js/tx.js"></script>
+    <script src="js/simple-tx-builder.js"></script>
     <script src="js/wallet.js"></script>
     <script src="js/carbonwallet-app.js"></script>
     <script src="js/carbonwallet-dash.js"></script>

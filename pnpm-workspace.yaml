@@ -1,0 +1,14 @@
+packages:
+  - .
+
+nodeLinker: hoisted
+
+allowBuilds:
+  electron: true
+  electron-winstaller: true
+
+# Electron Forge 7.11.2 depends on the official @electron/node-gyp Git source.
+blockExoticSubdeps: false
+
+minimumReleaseAgeExclude:
+  - electron@44.7.2
